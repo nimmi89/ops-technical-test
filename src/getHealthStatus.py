@@ -1,12 +1,9 @@
 import json
 
 def lambda_handler(event, context):
-    body = "Your API is healthy!!"
+    body = "Lambda says your API is healthy!!"
     statusCode = 200
-    return{
-        "statusCode" : statusCode,
-        "body" : json.dumps(body)
+    return { "isBase64Encoded": True, "statusCode": 200, "headers": {  }, "body": json.dumps(body) }
 
-   }
 
 
