@@ -1,0 +1,222 @@
+
+# Archive multiple files for lambda.
+data "archive_file" "lambdafiles" {
+  type        = "zip"
+  output_path = "${path.module}/lambda.zip"
+
+  source {
+    content  = file("../lambda_files/getRootResponse.py")
+    filename = "getRootResponse.py"
+  }
+
+  source {
+    content  = file("../lambda_files/getHealthStatus.py")
+    filename = "getHealthStatus.py"
+  }
+}
+# IAM role to give Lambda function access to CloudWatch.
+
+resource "aws_iam_role" "tf_lambda_role" {
+  name = "${var.project-name}-lambda-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+  tags = {
+    Name = "${var.project-name}_lambda_role"
+  }
+}
+
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "lambda_logging"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.tf_lambda_role.id
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+# API GATEWAY [Common]
+resource "aws_api_gateway_rest_api" "tf-api-gw" {
+  name        = "${var.project-name}-api-gw"
+  description = "Myob Serverless Application"
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+ 
+  tags = {
+    Name = "${var.project-name}-api-gw"
+  }
+
+}
+
+
+
+
+
+
+
+
+
+#Resource 1 endpoint[Root]
+
+resource "aws_api_gateway_method" "get_root" {
+  rest_api_id      = aws_api_gateway_rest_api.tf-api-gw.id
+  resource_id      = aws_api_gateway_rest_api.tf-api-gw.root_resource_id
+  http_method      = "GET"
+  authorization    = "NONE"
+  # api_key_required = true
+}
+
+# LAMBDA 1[Process root resource]
+resource "aws_lambda_function" "tf_lambda_fn1" {
+  function_name = "${var.project-name}-root-lambda"
+  # The bucket storing the source code artifact
+  #s3_bucket        = "${var.project-name}-s3-bucket"
+  #s3_key           = "v${var.app-version}/lambda.zip"
+  filename         = data.archive_file.lambdafiles.output_path
+  source_code_hash = filebase64sha256(data.archive_file.lambdafiles.output_path)
+  handler          = "getRootResponse.lambda_handler"
+  runtime          = "python3.8"
+  role             = aws_iam_role.tf_lambda_role.arn
+  tags = {
+    Name = "${var.project-name}-root-lambda"
+  }
+}
+resource "aws_lambda_permission" "apigw_lambda1" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.tf_lambda_fn1.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.tf-api-gw.execution_arn}/*/*"
+}
+
+resource "aws_api_gateway_integration" "lambda1" {
+  rest_api_id             = aws_api_gateway_rest_api.tf-api-gw.id
+  resource_id             = aws_api_gateway_method.get_root.resource_id
+  http_method             = aws_api_gateway_method.get_root.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  
+  uri                     = aws_lambda_function.tf_lambda_fn1.invoke_arn
+}
+
+#Resource 2 endpoint[Health]
+
+resource "aws_api_gateway_resource" "health" {
+  rest_api_id = aws_api_gateway_rest_api.tf-api-gw.id
+  parent_id   = aws_api_gateway_rest_api.tf-api-gw.root_resource_id
+  path_part   = "health"
+}
+
+resource "aws_api_gateway_method" "get_health" {
+  rest_api_id      = aws_api_gateway_rest_api.tf-api-gw.id
+  resource_id      = aws_api_gateway_resource.health.id
+  http_method      = "GET"
+  authorization    = "NONE"
+  # api_key_required = true
+}
+
+# LAMBDA 2[Process health check]
+resource "aws_lambda_function" "tf_lambda_fn2" {
+  function_name = "${var.project-name}-health-lambda"
+  # The bucket storing the source code artifact
+  #s3_bucket        = "${var.project-name}-s3-bucket"
+  #s3_key           = "v${var.app-version}/lambda.zip"
+  source_code_hash = filebase64sha256(data.archive_file.lambdafiles.output_path)
+  #handler          = "lambda_handler.lambda_handler"
+  filename = data.archive_file.lambdafiles.output_path
+  handler  = "getHealthStatus.lambda_handler"
+  runtime  = "python3.8"
+  role     = aws_iam_role.tf_lambda_role.arn
+  tags = {
+    Name = "${var.project-name}-health-lambda"
+  }
+
+}
+resource "aws_lambda_permission" "apigw_lambda2" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.tf_lambda_fn2.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.tf-api-gw.execution_arn}/*/*"
+}
+
+resource "aws_api_gateway_integration" "lambda2" {
+  rest_api_id             = aws_api_gateway_rest_api.tf-api-gw.id
+  resource_id             = aws_api_gateway_method.get_health.resource_id
+  http_method             = aws_api_gateway_method.get_health.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  content_handling        = "CONVERT_TO_TEXT"
+  uri                     = aws_lambda_function.tf_lambda_fn2.invoke_arn
+}
+
+
+
+#API DEPLOYMENT
+resource "aws_api_gateway_deployment" "tf-gw-deployment" {
+  depends_on = [
+    aws_api_gateway_integration.lambda1,
+    aws_api_gateway_integration.lambda2,
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.tf-api-gw.id
+  stage_name  = "v1Serverless"
+}
+
+resource "aws_api_gateway_api_key" "tf-api-key" {
+  name = "${var.project-name}-api-key"
+}
+
+
+resource "aws_api_gateway_usage_plan" "tf-gw-usage-plan" {
+  name        = "${var.project-name}-gw-usage-plan"
+  #description = "usage plan for version ${var.app-version}"
+  description = "usage plan for version v1"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.tf-api-gw.id
+    stage  = aws_api_gateway_deployment.tf-gw-deployment.stage_name
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "v1" {
+  key_id        = aws_api_gateway_api_key.tf-api-key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.tf-gw-usage-plan.id
+}
+
+
