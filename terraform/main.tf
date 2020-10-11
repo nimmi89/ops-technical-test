@@ -71,7 +71,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
-# API GATEWAY [Common]
+# API GATEWAY  [Common]
 resource "aws_api_gateway_rest_api" "tf-api-gw" {
   name        = "${var.project-name}-api-gw"
   description = "Myob Serverless Application"
@@ -82,8 +82,23 @@ resource "aws_api_gateway_rest_api" "tf-api-gw" {
   tags = {
     Name = "${var.project-name}-api-gw"
   }
-
 }
+
+resource "aws_api_gateway_api_key" "tf-api-key" {
+  name = "${var.project-name}-api-key"
+}
+
+# SSM [Storing the api key value generated]
+resource "aws_ssm_parameter" "api_key" {
+  name  = "API_KEY"
+  type  = "SecureString"
+  value = aws_api_gateway_api_key.tf-api-key.value
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 
 # Resource 1 endpoint[Root]
 
@@ -92,7 +107,7 @@ resource "aws_api_gateway_method" "get_root" {
   resource_id      = aws_api_gateway_rest_api.tf-api-gw.root_resource_id
   http_method      = "GET"
   authorization    = "NONE"
-  # api_key_required = true
+  api_key_required = true
 }
 
 # LAMBDA 1[Process root resource]
@@ -142,7 +157,7 @@ resource "aws_api_gateway_method" "get_health" {
   resource_id      = aws_api_gateway_resource.health.id
   http_method      = "GET"
   authorization    = "NONE"
-  # api_key_required = true
+  api_key_required = true
 }
 
 # LAMBDA 2[Process health check]
@@ -192,7 +207,7 @@ resource "aws_api_gateway_method" "get_metadata" {
   resource_id   = aws_api_gateway_resource.metadata.id
   http_method   = "GET"
   authorization = "NONE"
-  #api_key_required = true
+  api_key_required = true
 }
 
 # To get git_sha and version
@@ -257,10 +272,6 @@ resource "aws_api_gateway_deployment" "tf-gw-deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.tf-api-gw.id
   stage_name  = "v1OpsTechnicalTest"
-}
-
-resource "aws_api_gateway_api_key" "tf-api-key" {
-  name = "${var.project-name}-api-key"
 }
 
 
