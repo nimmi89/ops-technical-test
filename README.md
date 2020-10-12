@@ -43,6 +43,7 @@ The project should implement the following:
 ```
 git clone git@github.com:nimmi89/ops-technical-test.git
 cd ops-technical-test
+git checkout nimmi89/myob-test [If not merged in master]
 ```
 
 ** Check if you have permission to clone the repository via SSH, or insert your ssh-key on your github([more details here](https://help.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account)).
@@ -60,17 +61,17 @@ Installing from your Local Machine
   export AWS_DEFAULT_REGION="your region"
   ```
 
-3. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 3.
+3. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 4.
 
-4. Run `make deploy` [Applies the terraform plan to create your infrastructure resources]. Alternatively, you can also run steps 4 and 5 individually before this.This target runs the other targets as well.
+4. Run `make deploy` [Applies the terraform plan to create your infrastructure resources]. Alternatively, you can also run steps 5 and 6 individually before this. This target runs the other targets as well.
 
 5. Run `make init` [Initialize a working directory containing Terraform configuration files.]
 
 6. Run `make plan` [Performs a refresh and determines actions necessary to achieve the desired state specified in the configuration files]
 
-7. Run 'make test' to see if the APIs are created and run succcessfully.
+7. Run `make test` to see if the APIs are created and run succcessfully. It fires the [script](./scripts/test.sh)
 
-8. Finally, clean your environment by running `make clean`. It destroys all the resources.
+8. Finally, clean your environment by running `make clean`. It destroys all the AWS resources.
 
 ## Solution Overview
 
@@ -80,7 +81,7 @@ The API gateway endpoint is integrated with different lambda functions written i
 
 The solution is then organized as per the [3 Musketeers Approach](https://3musketeers.io/) which comprises of Docker, Docker-Compose and Make. The environment variables are injected into the container using the .env file. This makes it easier to build and run your application irrespective of the environment.
 
-The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder `.github/workflows` in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) .
+The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline .
 
 Finally , you can test your solution by running the test script written in bash using make target `make test`.
 
@@ -90,10 +91,10 @@ The solution diagram is shown below:
 
 ## Application Risks
 
-- In this solution, the API gateway has been autorized with an API key which is a hash code generated while creating the key and its value is stored in SSM parameter store. While testing the APIs, the API key needs to be fetched from SSM and then included with the API url. However, there are more security practices.
+- In this solution, the API gateway has been autorized with an API key which is a hash code generated while creating the key and its value is stored in SSM parameter store. While testing the APIs, the API key needs to be fetched from SSM and then included with the API url. However, there are more practices that could be considered for compliance and security.
 - There is a risk of complexity since all the API rules are in one place.
 - When you deploy an API to API Gateway, throttling is enabled by default in the stage configurations. All your APIs in the entire region share a rate limit that can be exhausted by a single method incase of a DOS Attack.
-- Having an S3 bucket set aside for staging our archive and would use this to "hand off" these artifacts between the build and deploy process can be done.
+- Having an S3 bucket set aside for staging our archive and using this to "hand off" these artifacts between the build and deploy process is a good practice.
 
 ## Contributors
 
