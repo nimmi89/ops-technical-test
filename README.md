@@ -61,17 +61,19 @@ Installing from your Local Machine
   export AWS_DEFAULT_REGION="your region"
   ```
 
-3. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 4.
+3. Run `make tf-backend`. This target creates a s3 bucket to keep the terraform state file which is needed for creation/destruction of infrastructure resources. If you wish to create a different bucket name, change in makefile and [backend file](/terraform/_backend.tf) accordingly.
 
-4. Run `make deploy` [Applies the terraform plan to create your infrastructure resources]. Alternatively, you can also run steps 5 and 6 individually before this. This target runs the other targets as well.
+4. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 5.
 
-5. Run `make init` [Initialize a working directory containing Terraform configuration files.]
+5. Run `make deploy` [Applies the terraform plan to create your infrastructure resources]. Alternatively, you can also run steps 6 and 7 individually before this. This target runs the other targets as well.
 
-6. Run `make plan` [Performs a refresh and determines actions necessary to achieve the desired state specified in the configuration files]
+6. Run `make init` [Initialize a working directory containing Terraform configuration files.]
 
-7. Run `make test` to see if the APIs are created and run succcessfully. It fires the [script](./scripts/test.sh)
+7. Run `make plan` [Performs a refresh and determines actions necessary to achieve the desired state specified in the configuration files]
 
-8. Finally, clean your environment by running `make clean`. It destroys all the AWS resources.
+8. Run `make test` to see if the APIs are created and run succcessfully. It fires the [script](./scripts/test.sh)
+
+9. Finally, clean your environment by running `make clean`. It destroys all the AWS resources.
 
 ## Solution Overview
 
@@ -81,7 +83,7 @@ The API gateway endpoint is integrated with different lambda functions written i
 
 The solution is then organized as per the [3 Musketeers Approach](https://3musketeers.io/) which comprises of Docker, Docker-Compose and Make. The environment variables are injected into the container using the .env file. This makes it easier to build and run your application irrespective of the environment.
 
-The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline .
+The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline. Ensure that the environment is clean to avoid duplication errors.
 
 Finally , you can test your solution by running the test script written in bash using make target `make test`.
 
