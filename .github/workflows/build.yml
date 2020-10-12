@@ -24,8 +24,6 @@ jobs:
   - name: Build App
     run:  make deploy
 
-  - name: Test App
-    run: make test
 
 
 
