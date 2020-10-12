@@ -61,7 +61,7 @@ Installing from your Local Machine
   export AWS_DEFAULT_REGION="your region"
   ```
 
-3. Run `make tf-backend`. This target creates a s3 bucket to keep the terraform state file which is needed for creation/destruction of infrastructure resources. If you wish to create a different bucket name, change in makefile and [backend file](/terraform/_backend.tf) accordingly.
+3. Run `make tf-backend`. This target creates a s3 bucket to keep the terraform state file which is needed for creation/destruction of infrastructure resources. If you wish to create a different bucket name, change in [makefile](Makefile) and [backend file](/terraform/_backend.tf) accordingly.
 
 4. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 5.
 
