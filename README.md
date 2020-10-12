@@ -83,7 +83,7 @@ The API gateway endpoint is integrated with different lambda functions written i
 
 The solution is then organized as per the [3 Musketeers Approach](https://3musketeers.io/) which comprises of Docker, Docker-Compose and Make. The environment variables are injected into the container using the .env file. This makes it easier to build and run your application irrespective of the environment.
 
-The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline. Ensure that the environment is clean to avoid duplication errors.
+The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline. Ensure that the environment is clean to avoid duplication errors. You can view the pipeline in the Actions tab under your repository. ![](images/GithubActions.PNG)
 
 Finally , you can test your solution by running the test script written in bash using make target `make test`.
 

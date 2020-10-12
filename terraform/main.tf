@@ -114,9 +114,6 @@ resource "aws_api_gateway_method" "get_root" {
 
 resource "aws_lambda_function" "tf_lambda_fn1" {
   function_name = "${var.project-name}-get-root-response"
-  # The bucket storing the source code artifact
-  #s3_bucket        = "${var.project-name}-s3-bucket"
-  #s3_key           = "v${var.app-version}/lambda.zip"
   filename         = data.archive_file.lambdafiles.output_path
   source_code_hash = filebase64sha256(data.archive_file.lambdafiles.output_path)
   handler          = "getRootResponse.lambda_handler"
@@ -163,12 +160,8 @@ resource "aws_api_gateway_method" "get_health" {
 # LAMBDA 2[Process health check]
 resource "aws_lambda_function" "tf_lambda_fn2" {
   function_name = "${var.project-name}-get-health-status"
-  # The bucket storing the source code artifact
-  #s3_bucket        = "${var.project-name}-s3-bucket"
-  #s3_key           = "v${var.app-version}/lambda.zip"
-  source_code_hash = filebase64sha256(data.archive_file.lambdafiles.output_path)
-  #handler          = "lambda_handler.lambda_handler"
   filename = data.archive_file.lambdafiles.output_path
+  source_code_hash = filebase64sha256(data.archive_file.lambdafiles.output_path)
   handler  = "getHealthStatus.lambda_handler"
   runtime  = "python3.8"
   role     = aws_iam_role.tf_lambda_role.arn
