@@ -77,7 +77,7 @@ Installing from your Local Machine
 
 ## Solution Overview
 
-The solution has used AWS services like [API Gateway](https://aws.amazon.com/api-gateway/), [Lambda](https://aws.amazon.com/lambda/), SSM parameter store, [CloudWatch](https://aws.amazon.com/cloudwatch/). It creates these AWS resources using the concept of Infrastructure as Code[IAC] with the help of [Terraform](https://www.terraform.io/)
+The solution has used AWS services like [API Gateway](https://aws.amazon.com/api-gateway/), [Lambda](https://aws.amazon.com/lambda/), SSM parameter store, [CloudWatch](https://aws.amazon.com/cloudwatch/). It creates these AWS resources using the concept of Infrastructure as Code[IAC] with the help of [Terraform](https://www.terraform.io/).
 
 The API gateway endpoint is integrated with different lambda functions written in python in [src/ folder](./src) to process the resources as per [Requirements](#requirements). [IAM](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html) is used to securely access these AWS services.
 
