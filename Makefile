@@ -26,7 +26,7 @@ init:
 
 
 test:   
-	bash scripts/test.sh
+	bash scripts/test.sh $(API_URL)
 
 clean:
 	$(DOCKER_RUN) terraform destroy

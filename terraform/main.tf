@@ -277,8 +277,7 @@ resource "aws_api_gateway_deployment" "tf-gw-deployment" {
 
 resource "aws_api_gateway_usage_plan" "tf-gw-usage-plan" {
   name        = "${var.project-name}-gw-usage-plan"
-  #description = "usage plan for version ${var.app-version}"
-  description = "usage plan for version v1"
+  description = "usage plan for version v1.0"
 
   api_stages {
     api_id = aws_api_gateway_rest_api.tf-api-gw.id

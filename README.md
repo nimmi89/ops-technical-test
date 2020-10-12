@@ -11,6 +11,7 @@ This project aims at creating a simple, small, operable web-style API or service
 - [Required Tools](#required-tools)
 - [Quick Start](#quick-start)
 - [Solution Overview](#solution-overview)
+- [Application Risks](#application-risks)
 - [Contributors](#contributors)
 
 ## Requirements
@@ -25,13 +26,17 @@ The project should implement the following:
 
 - Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
-- Install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+- Install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
 
 - Install [Docker](https://docs.docker.com/get-docker/)
 
   - Related tool:
 
     - [Docker Compose](https://docs.docker.com/compose/install/)
+
+      ```
+      Note: If installing on an AWS EC2 instance, follow the steps in the [link](https://gist.github.com/npearce/6f3c7826c7499587f00957fee62f8ee9). Also, Docker or docker-Compose should be run as root `sudo service docker start` or add user to the docker user group.
+      ```
 
 - Clone the repository and get inside it:
 
@@ -47,19 +52,24 @@ cd ops-technical-test
 Installing from your Local Machine
 
 1. Install Required Tools (as above)
-2. Export the variables given in .env file in root So, according to this example
+2. Export the variables given in [.env file](.env) in root So, according to this example
 
   ```bash
   export AWS_ACCESS_KEY_ID="your_access_key"
   export AWS_SECRET_ACCESS_KEY="your_secret"
+  export AWS_DEFAULT_REGION="your region"
   ```
 
-3. Run `make init` [Initialize a working directory containing Terraform configuration files.]
+3. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `ssm-put` called internally by step 3.
 
-4. Run `make plan` [Performs a refresh and determines actions necessary to achieve the desired state specified in the configuration files]
-5. Run `make deploy` [Applies the plan to create the resources]. Alternatively, you can skip steps 3 and 4 and directly run this.
-6. Note that the application puts the git commit sha and version in the [AWS systems manager store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) to be consumed by the application endpoint. The target which it uses is `make ssm-put`.
+4. Run `make deploy` [Applies the terraform plan to create your infrastructure resources]. Alternatively, you can also run steps 4 and 5 individually before this.This target runs the other targets as well.
+
+5. Run `make init` [Initialize a working directory containing Terraform configuration files.]
+
+6. Run `make plan` [Performs a refresh and determines actions necessary to achieve the desired state specified in the configuration files]
+
 7. Run 'make test' to see if the APIs are created and run succcessfully.
+
 8. Finally, clean your environment by running `make clean`. It destroys all the resources.
 
 ## Solution Overview
@@ -78,14 +88,12 @@ The solution diagram is shown below:
 
 ![](images/ops-technical-test.png)
 
+## Application Risks
 
-
-## Associated Risks and Scenarios
-
-- Docker or docker-Compose should be run as root `sudo service docker start` or add user to the docker user group.
-- In this solution, the API gateway has been autorized with an API key which is a hash code generated while creating the key and its value is stored in SSM parameter store. While testing the APIs, the API key needs to be fetched from SSM and then included with the API url.
+- In this solution, the API gateway has been autorized with an API key which is a hash code generated while creating the key and its value is stored in SSM parameter store. While testing the APIs, the API key needs to be fetched from SSM and then included with the API url. However, there are more security practices.
 - There is a risk of complexity since all the API rules are in one place.
 - When you deploy an API to API Gateway, throttling is enabled by default in the stage configurations. All your APIs in the entire region share a rate limit that can be exhausted by a single method incase of a DOS Attack.
+- Having an S3 bucket set aside for staging our archive and would use this to "hand off" these artifacts between the build and deploy process can be done.
 
 ## Contributors
 
