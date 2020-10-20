@@ -18,28 +18,23 @@ headers = {'x-api-key':'1KS7AxDY5x1YRgjQLwhCl7DkH5r4WxiG48toH7IJ'}
 
 def test_apiendpoint_response():
     response = requests.get(url, headers=headers)
-    print(response)
     assert response.status_code == 200
 
 def test_apiendpoint_header():
     response = requests.get(url , headers=headers)
     assert response.headers['Content-Type'] == "application/json"
 
-def test_apiendpoint_header():
-    response = requests.get(url, headers=headers)
-    assert response.headers['Content-Type'] == "application/json"
 
 def test_apiendpoint_metadata_sha():
     response = requests.get(metadata_url, headers=headers)
     response_body = response.json()
-    print(response_body)
     assert response_body["myapplication"][0]["lastcommitsha"] == "9287354"
 
 
 def test_apiendpoint_metadata_version():
     response = requests.get(metadata_url, headers=headers)
     response_body = response.json()
-    assert response_body["myapplication"][0]["version"] == "1.0"
+    assert response_body["myapplication"][0]["version"] == "1.1"
 
 
 
