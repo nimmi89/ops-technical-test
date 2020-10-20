@@ -73,7 +73,15 @@ Installing from your Local Machine
 
 8. Run `make test` to see if the APIs are created and run succcessfully. It fires the [script](./scripts/test.sh)
 
-9. Finally, clean your environment by running `make clean`. It destroys all the AWS resources.
+9. Unit tests for the code are included in [script](./scripts/unit-tests.py). The execution steps are as follows:
+
+  ```
+  cd scripts
+  pip install -r requirements.txt
+  pytest unit-tests.py
+  ```
+
+10. Finally, clean your environment by running `make clean`. It destroys all the AWS resources.
 
 ## Solution Overview
 
@@ -85,7 +93,7 @@ The solution is then organized as per the [3 Musketeers Approach](https://3muske
 
 The solution also includes a CICD pipleine to build the application on each commit using [Github Actions](https://docs.github.com/en/free-pro-team@latest/actions). The workflow for this is defined in the folder [.github](/.github/workflows) in the root directory. In this case, you need to set your AWS credentials using [Secrets](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) to be used by the pipeline. Ensure that the environment is clean to avoid duplication errors. You can view the pipeline in the Actions tab under your repository. ![](images/GithubActions.PNG)
 
-Finally , you can test your solution by running the test script written in bash using make target `make test`.
+Finally , you can test your solution by running the test script written in bash using make target `make test`. Or run unit tests by changing parameters in [file](./scripts/unit-tests.py).
 
 The solution diagram is shown below:
 
